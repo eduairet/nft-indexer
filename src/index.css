@@ -13,6 +13,7 @@
 
 * {
     font-family: 'Pathway Extreme', sans-serif;
+    box-sizing: border-box;
 }
 
 body {
@@ -57,7 +58,7 @@ button {
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 700;
     background-color: magenta;
     cursor: pointer;
     transition: border-color 0.25s ease;
@@ -68,6 +69,12 @@ button:hover {
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
+}
+button:disabled {
+    background-color: #242424;
+    color: magenta;
+    border-color: magenta;
+    cursor: not-allowed;
 }
 
 @media (prefers-color-scheme: light) {

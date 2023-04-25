@@ -12,7 +12,7 @@ export default function IndexerHeader() {
                 <Heading mb={0} fontSize='4rem'>
                     NFT Indexer
                 </Heading>
-                <Text>
+                <Text fontSize='1.25rem'>
                     Plug in an address and this website will return all of its
                     NFTs!
                 </Text>

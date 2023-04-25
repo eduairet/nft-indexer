@@ -2,37 +2,54 @@ import { useContext } from 'react';
 import { Button, Heading, Input } from '@chakra-ui/react';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { EthereumContext } from '../store/ethereum-context';
-const { VITE_API_KEY } = import.meta.env;
+import { utils } from 'ethers';
+const { VITE_API_KEY } = import.meta.env,
+    { isAddress } = utils;
 
 export default function Query() {
     const {
-        userAddress,
-        setResults,
-        setTokenDataObjects,
-        setHasQueried,
-        setUserAddress,
-    } = useContext(EthereumContext);
+            userAddress,
+            setResults,
+            setTokenDataObjects,
+            setHasQueried,
+            setUserAddress,
+            isQuerying,
+            setIsQuerying,
+        } = useContext(EthereumContext),
+        checkAddress = () => {
+            const check =
+                isAddress(userAddress) || /^[a-z]+\.eth$/.test(userAddress);
+            return check;
+        };
 
     async function getNFTsForOwner() {
-        const config = {
-                apiKey: VITE_API_KEY,
-                network: Network.ETH_MAINNET,
-            },
-            alchemy = new Alchemy(config),
-            data = await alchemy.nft.getNftsForOwner(userAddress);
-
-        setResults(data);
-        const tokenDataPromises = [];
-        for (let i = 0; i < data.ownedNfts.length; i++) {
-            const tokenData = alchemy.nft.getNftMetadata(
-                data.ownedNfts[i].contract.address,
-                data.ownedNfts[i].tokenId
-            );
-            tokenDataPromises.push(tokenData);
+        setIsQuerying(true);
+        try {
+            const config = {
+                    apiKey: VITE_API_KEY,
+                    network: Network.ETH_MAINNET,
+                },
+                alchemy = new Alchemy(config);
+            let queryAddress = userAddress;
+            if (/[a-z]+\.eth/.test(queryAddress)) {
+                queryAddress = await alchemy.core.resolveName(queryAddress);
+            }
+            const data = await alchemy.nft.getNftsForOwner(queryAddress);
+            setResults(data);
+            const tokenDataPromises = [];
+            for (let i = 0; i < data.ownedNfts.length; i++) {
+                const tokenData = alchemy.nft.getNftMetadata(
+                    data.ownedNfts[i].contract.address,
+                    data.ownedNfts[i].tokenId
+                );
+                tokenDataPromises.push(tokenData);
+            }
+            setTokenDataObjects(await Promise.all(tokenDataPromises));
+            setHasQueried(true);
+        } catch (err) {
+            alert(err);
         }
-
-        setTokenDataObjects(await Promise.all(tokenDataPromises));
-        setHasQueried(true);
+        setIsQuerying(false);
     }
 
     return (
@@ -45,15 +62,20 @@ export default function Query() {
                 color='black'
                 w='600px'
                 textAlign='center'
-                p={4}
-                bgColor='white'
-                fontSize={24}
+                p='1rem'
+                borderRadius='0.5rem'
+                bgColor='beige'
+                fontSize='1.1rem'
+                value={userAddress}
+                border={`2px solid ${
+                    checkAddress() || userAddress === '' ? 'cyan' : 'red'
+                }`}
             />
             <Button
-                fontSize={20}
+                isLoading={isQuerying}
                 onClick={getNFTsForOwner}
                 mt={36}
-                bgColor='magenta'
+                isDisabled={!checkAddress() || isQuerying}
             >
                 Fetch NFTs
             </Button>

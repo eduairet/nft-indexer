@@ -3,12 +3,9 @@ import React, { useState } from 'react';
 import { WagmiConfig, createClient, configureChains, mainnet } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
-import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet';
 import { InjectedConnector } from 'wagmi/connectors/injected';
-import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
-import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
 
-const { VITE_API_KEY, VITE_WALLET_CONNECT } = import.meta.env,
+const { VITE_API_KEY } = import.meta.env,
     { chains, provider, webSocketProvider } = configureChains(
         [mainnet],
         [alchemyProvider({ apiKey: VITE_API_KEY }), publicProvider()]
@@ -16,23 +13,10 @@ const { VITE_API_KEY, VITE_WALLET_CONNECT } = import.meta.env,
     client = createClient({
         autoConnect: true,
         connectors: [
-            new MetaMaskConnector({ chains }),
-            new CoinbaseWalletConnector({
-                chains,
-                options: {
-                    appName: 'NFT Indexer',
-                },
-            }),
-            new WalletConnectConnector({
-                chains,
-                options: {
-                    projectId: VITE_WALLET_CONNECT,
-                },
-            }),
             new InjectedConnector({
                 chains,
                 options: {
-                    name: 'Injected',
+                    name: 'Connect',
                     shimDisconnect: true,
                 },
             }),
@@ -50,13 +34,16 @@ export const EthereumContext = React.createContext({
     setHasQueried: () => {},
     tokenDataObjects: [],
     setTokenDataObjects: () => {},
+    isQuerying: false,
+    setIsQuerying: () => {},
 });
 
 const EthereumContextProvider = ({ children }) => {
     const [userAddress, setUserAddress] = useState(''),
         [results, setResults] = useState([]),
         [hasQueried, setHasQueried] = useState(false),
-        [tokenDataObjects, setTokenDataObjects] = useState([]);
+        [tokenDataObjects, setTokenDataObjects] = useState([]),
+        [isQuerying, setIsQuerying] = useState(false);
 
     return (
         <WagmiConfig client={client}>
@@ -70,6 +57,8 @@ const EthereumContextProvider = ({ children }) => {
                     setHasQueried,
                     tokenDataObjects,
                     setTokenDataObjects,
+                    isQuerying,
+                    setIsQuerying,
                 }}
             >
                 {children}

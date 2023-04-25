@@ -5,7 +5,7 @@ import Result from './components/Result';
 
 function App() {
     return (
-        <Box w='100vw'>
+        <Box w='100vw' paddingY='3rem'>
             <IndexerHeader />
             <Flex
                 w='100%'
