@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Button, Heading, Input } from '@chakra-ui/react';
-import { Alchemy, Network } from 'alchemy-sdk';
+import { Alchemy, Network, NftFilters } from 'alchemy-sdk';
 import { EthereumContext } from '../store/ethereum-context';
 import { utils } from 'ethers';
 const { VITE_API_KEY } = import.meta.env,
@@ -31,18 +31,24 @@ export default function Query() {
                 },
                 alchemy = new Alchemy(config);
             let queryAddress = userAddress;
-            if (/[a-z]+\.eth/.test(queryAddress)) {
+            if (/^[a-z]+\.eth/.test(queryAddress)) {
                 queryAddress = await alchemy.core.resolveName(queryAddress);
             }
-            const data = await alchemy.nft.getNftsForOwner(queryAddress);
+            const data = await alchemy.nft.getNftsForOwner(queryAddress, {
+                excludeFilters: [NftFilters.SPAM],
+            });
             setResults(data);
             const tokenDataPromises = [];
             for (let i = 0; i < data.ownedNfts.length; i++) {
-                const tokenData = alchemy.nft.getNftMetadata(
-                    data.ownedNfts[i].contract.address,
-                    data.ownedNfts[i].tokenId
-                );
-                tokenDataPromises.push(tokenData);
+                try {
+                    const tokenData = alchemy.nft.getNftMetadata(
+                        data.ownedNfts[i].contract.address,
+                        data.ownedNfts[i].tokenId
+                    );
+                    tokenDataPromises.push(tokenData);
+                } catch (err) {
+                    tokenDataPromises.push(null);
+                }
             }
             setTokenDataObjects(await Promise.all(tokenDataPromises));
             setHasQueried(true);
@@ -55,7 +61,7 @@ export default function Query() {
     return (
         <>
             <Heading mt={42}>
-                Get all the ERC-721 tokens of this address:
+                Get all the ERC-721 tokens of this address or ENS:
             </Heading>
             <Input
                 onChange={e => setUserAddress(e.target.value)}

@@ -25,41 +25,66 @@ export default function Result() {
                 size='xl'
             />
         </Center>
-    ) : (
+    ) : hasQueried && results.ownedNfts.length && !isQuerying ? (
         <>
             <Heading my={36}>Here are your NFTs:</Heading>
-            {hasQueried ? (
-                <SimpleGrid w={'90vw'} columns={4} spacing={24}>
-                    {results.ownedNfts.map((e, i) => {
+            <SimpleGrid w={'90vw'} maxWidth={800} columns={3} spacing='3rem'>
+                {results.ownedNfts.map((e, i) => {
+                    const nft = tokenDataObjects[i];
+                    if (!nft.metadataError) {
+                        let gateway;
+                        try {
+                            gateway = nft.media[0].gateway;
+                        } catch (err) {
+                            gateway = 'https://via.placeholder.com/200';
+                        }
                         return (
                             <Flex
                                 key={`nft-${e.id}-${i}`}
                                 flexDir={'column'}
                                 color='white'
-                                bg='blue'
-                                w={'20vw'}
+                                gap='1rem'
+                                alignItems='center'
+                                justifyContent='space-between'
                             >
-                                <Box>
-                                    <b>Name:</b>{' '}
-                                    {tokenDataObjects[i].title?.length === 0
+                                <Box fontWeight={700}>
+                                    {nft.title?.length === 0
                                         ? 'No Name'
-                                        : tokenDataObjects[i].title}
+                                        : nft.title}
                                 </Box>
-                                <Image
-                                    src={
-                                        tokenDataObjects[i]?.rawMetadata
-                                            ?.image ??
-                                        'https://via.placeholder.com/200'
-                                    }
-                                    alt={'Image'}
-                                />
+                                <Flex
+                                    border='3px solid cyan'
+                                    borderRadius='0.5rem'
+                                    width='15rem'
+                                    height='15rem'
+                                    overflow='hidden'
+                                    alignItems='center'
+                                    justifyContent='center'
+                                >
+                                    <Image
+                                        width='100%'
+                                        height='100%'
+                                        objectFit='cover'
+                                        src={gateway}
+                                        alt={'NFT Image'}
+                                    />
+                                </Flex>
                             </Flex>
                         );
-                    })}
-                </SimpleGrid>
-            ) : (
-                'Please make a query! The query may take a few seconds...'
-            )}
+                    } else {
+                        return null;
+                    }
+                })}
+            </SimpleGrid>
+        </>
+    ) : (
+        <>
+            <Heading my={36}>Your NFTs will appear below</Heading>
+            <Center>
+                {hasQueried
+                    ? 'No results'
+                    : 'Please make a query! The query may take a few seconds...'}
+            </Center>
         </>
     );
 }
